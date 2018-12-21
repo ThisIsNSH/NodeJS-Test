@@ -1,23 +1,28 @@
-var http = require('http');
-var fs = require('fs');
+var express = require('express');
+var bodyParser = require('body-parser');
+var app = express();
 
-var server = http.createServer(function(req,res){
-	console.log('request was made: '+req.url);
-	if (req.url === '/home' || req.url === '/'){
-		res.writeHead(200,{'Content-Type':'text/html'});
-		fs.createReadStream(__dirname+'/index.html').pipe(res);
-	}else if(req.url === '/contact'){
-		res.writeHead(200,{'Content-Type':'text/html'});
-		fs.createReadStream(__dirname+'/contact.html').pipe(res);
-	}else if(req.url =='/api/ninjas'){
-		var ninjas = [{name: 'ryu', age: 29},{name: 'yoshi', age: 39}];
-		res.writeHead(200,{'Content-Type':'application/json'});
-		res.end(JSON.stringify(ninjas));
-	}else{
-		res.writeHead(404,{'Content-Type':'text/html'});
-		fs.createReadStream(__dirname+'/404.html').pipe(res);
-	}
+var urlencodedParser = bodyParser.urlencoded({extended: false}); 
+
+app.set('view engine','ejs');
+app.use('/assets',express.static('assets'));
+
+app.get('/',function(req,res){
+	res.render('index');
 });
 
-server.listen(3005,'127.0.0.1');
-console.log('yo');
+app.get('/contact',function(req,res){
+	res.render('contact',{qs: req.query});
+});
+
+app.post('/contact',urlencodedParser,function(req,res){
+	res.render('contact-success',{data: req.body});
+	console.log(req.body);
+});
+
+app.get('/profile/:name', function(req,res){
+	var data = {age: 29, job: 'ninja', hobbies: ['eat','swim','fish']};
+	res.render('profile',{person: req.params.name, data: data});
+});
+
+app.listen(3001);
